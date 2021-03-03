@@ -43,8 +43,7 @@ def snippet_detail(request, pk):
 
     if request.method == 'GET':
         serializer = SnippetSerializer(snippet)
-        return JsonResponse(request.data)
-        #TODO: почему здесь не прокидывается статус 200? проверить
+        return JsonResponse(serializer.data)
 
     elif request.method == 'PUT':
         data = JSONParser().parse(request)
