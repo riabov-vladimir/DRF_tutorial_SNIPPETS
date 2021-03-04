@@ -9,6 +9,11 @@ from rest_framework.response import Response
 from rest_framework import mixins, generics, status
 
 
+#                Вариант 4
+#                - добавляем Mixin'ы
+#                - никакого хардкода, просто выбираешь
+#                нужный миксин и он знает что делать
+
 class SnippetList(mixins.ListModelMixin,
                   mixins.CreateModelMixin,
                   generics.GenericAPIView):
@@ -19,7 +24,7 @@ class SnippetList(mixins.ListModelMixin,
         return self.list(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
-        return self.post(request, *args, **kwargs)
+        return self.create(request, *args, **kwargs)
 
 
 class SnippetDetail(mixins.RetrieveModelMixin,
