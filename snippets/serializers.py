@@ -1,3 +1,4 @@
+from django.contrib.auth.models import User
 from rest_framework import serializers
 from snippets.models import *
 
@@ -7,6 +8,16 @@ class SnippetSerializer(serializers.ModelSerializer):
         model = Snippet
         fields = ['id', 'title', 'code', 'linenos', 'language', 'style']
         extra_kwargs = {'code': {'required': False}}
+
+
+class UserSerializer(serializers.ModelSerializer):
+    snippets = serializers.PrimaryKeyRelatedField(many=True,
+                                                  queryset=Snippet.objects.all())
+    # поле snippets это обратная связь и она не включается по умолчанию в классе Мета
+
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'snippets']
 
 
 """
