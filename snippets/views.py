@@ -1,5 +1,5 @@
 from snippets.models import Snippet
-from snippets.serializers import SnippetSerializer
+from snippets.serializers import SnippetSerializer, UserSerializer
 from django.http import HttpResponse, JsonResponse, Http404
 from rest_framework.parsers import JSONParser
 from django.views.decorators.csrf import csrf_exempt  # bypasses csrf token validation
@@ -7,7 +7,7 @@ from rest_framework.views import APIView
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import mixins, generics, status
-
+from django.contrib.auth.models import User
 
 #                Вариант 5
 #                - используем premixed mixins
@@ -23,6 +23,15 @@ class SnippetDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Snippet.objects.all()
     serializer_class = SnippetSerializer
 
+
+class UserList(generics.ListAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+
+
+class UserDetail(generics.RetrieveAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
 
 
 #                Вариант 4
