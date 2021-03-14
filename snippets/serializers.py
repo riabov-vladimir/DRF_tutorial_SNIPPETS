@@ -4,16 +4,19 @@ from snippets.models import *
 
 
 class SnippetSerializer(serializers.ModelSerializer):
+    owner = serializers.ReadOnlyField(source='owner.username')
+
     class Meta:
         model = Snippet
-        fields = ['id', 'title', 'code', 'linenos', 'language', 'style']
+        fields = ['id', 'owner', 'title', 'code', 'linenos', 'language', 'style']
         extra_kwargs = {'code': {'required': False}}
 
 
 class UserSerializer(serializers.ModelSerializer):
     snippets = serializers.PrimaryKeyRelatedField(many=True,
                                                   queryset=Snippet.objects.all())
-    # поле snippets это обратная связь и она не включается по умолчанию в классе Мета
+    # поле snippets это обратная связь, поэтому как
+    # поле она фактически не существует, её надо создавать
 
     class Meta:
         model = User
