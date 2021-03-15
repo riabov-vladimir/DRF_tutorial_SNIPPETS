@@ -1,4 +1,5 @@
 from snippets.models import Snippet
+from snippets.permissions import IsOwnerOrReadonly
 from snippets.serializers import SnippetSerializer, UserSerializer
 from django.http import HttpResponse, JsonResponse, Http404
 from rest_framework.parsers import JSONParser
@@ -29,7 +30,7 @@ class SnippetDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Snippet.objects.all()
     serializer_class = SnippetSerializer
 
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [IsOwnerOrReadonly, permissions.IsAuthenticatedOrReadOnly]
 
 
 class UserList(generics.ListAPIView):
