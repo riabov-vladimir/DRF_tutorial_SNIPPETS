@@ -1,5 +1,4 @@
 from rest_framework.reverse import reverse
-
 from snippets.models import Snippet
 from snippets.permissions import IsOwnerOrReadonly
 from snippets.serializers import SnippetSerializer, UserSerializer
@@ -7,42 +6,11 @@ from django.http import HttpResponse, JsonResponse, Http404
 from rest_framework.parsers import JSONParser
 from django.views.decorators.csrf import csrf_exempt  # bypasses csrf token validation
 from rest_framework.views import APIView
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, action
 from rest_framework.response import Response
-from rest_framework import mixins, generics, status, renderers
+from rest_framework import mixins, generics, status, renderers, viewsets
 from django.contrib.auth.models import User
 from rest_framework import permissions
-
-#                Вариант 5
-#                - используем premixed mixins
-#                - выбираем тот в названии которого есть всё что нам нужно
-
-
-class SnippetList(generics.ListCreateAPIView):
-    queryset = Snippet.objects.all()
-    serializer_class = SnippetSerializer
-
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-
-    def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
-
-
-class SnippetDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Snippet.objects.all()
-    serializer_class = SnippetSerializer
-
-    permission_classes = [IsOwnerOrReadonly, permissions.IsAuthenticatedOrReadOnly]
-
-
-class UserList(generics.ListAPIView):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-
-
-class UserDetail(generics.RetrieveAPIView):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
 
 
 @api_view(['GET'])
@@ -52,6 +20,15 @@ def api_root(request, format=None):
         'snippets': reverse('snippet-list', request=request, format=format),
     })
 
+#        ViewSet -- самый навороченный тип вью и the most drf-way как мне кажется
+
+class UserViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    This viewset automatically provides `list` and `retrieve` actions.
+    """
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+
 
 class SnippetHighlight(generics.GenericAPIView):
     queryset = Snippet.objects.all()
@@ -60,6 +37,66 @@ class SnippetHighlight(generics.GenericAPIView):
     def get(self, request, *args, **kwargs):
         snippet = self.get_object()
         return Response(snippet.highlighted)
+
+
+class SnippetViewSet(viewsets.ModelViewSet):
+    """
+    This viewset automatically provides `list`, `create`, `retrieve`,
+    `update` and `destroy` actions.
+
+    Additionally we also provide an extra `highlight` action.
+    """
+    queryset = Snippet.objects.all()
+    serializer_class = SnippetSerializer
+    permission_classes = [IsOwnerOrReadonly, permissions.IsAuthenticatedOrReadOnly]
+
+    @action(detail=True, renderer_classes=[renderers.StaticHTMLRenderer])
+    def highlight(self, request, *args, **kwargs):
+        snippet = self.get_object()
+        return Response(snippet.highlighted)
+
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
+
+
+#                Вариант 5
+#                - используем premixed mixins
+#                - выбираем тот в названии которого есть всё что нам нужно
+
+
+# class SnippetList(generics.ListCreateAPIView):
+#     queryset = Snippet.objects.all()
+#     serializer_class = SnippetSerializer
+#
+#     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+#
+#     def perform_create(self, serializer):
+#         serializer.save(owner=self.request.user)
+#
+#
+# class SnippetDetail(generics.RetrieveUpdateDestroyAPIView):
+#     queryset = Snippet.objects.all()
+#     serializer_class = SnippetSerializer
+#
+#     permission_classes = [IsOwnerOrReadonly, permissions.IsAuthenticatedOrReadOnly]
+
+
+
+#        ! Generics хорошо, но viewset'ы можно не разделять на retrieve и list !
+
+# class UserList(generics.ListAPIView):
+#     queryset = User.objects.all()
+#     serializer_class = UserSerializer
+#
+#
+# class UserDetail(generics.RetrieveAPIView):
+#     queryset = User.objects.all()
+#     serializer_class = UserSerializer
+
+
+
+
+
 
 #                Вариант 4
 
@@ -153,8 +190,7 @@ class SnippetHighlight(generics.GenericAPIView):
 #         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-
-# #        Вариант второй
+# #        Вариант 2
 # #        - вводим объект Response, который умеет проверять типы
 # #        данных и работать с набором именованных кодов
 # #        - вводим декоратор отвечающий за методы запросов
